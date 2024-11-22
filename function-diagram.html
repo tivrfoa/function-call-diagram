@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Function Diagram</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    #container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border: 1px solid #ccc;
+      background-color: #f9f9f9;
+    }
+
+    .rectangle {
+      position: absolute;
+      padding: 10px;
+      background-color: #fff;
+      border: 2px solid #007bff;
+      border-radius: 5px;
+      cursor: move;
+      user-select: none;
+    }
+
+    .line {
+      position: absolute;
+      background-color: #007bff;
+      z-index: 0;
+    }
+
+    #controls {
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <input id="functionInput" type="text" placeholder="Enter function name" />
+    <button id="addFunction">Add</button>
+  </div>
+  <div id="container"></div>
+
+  <script>
+    const container = document.getElementById('container');
+    const addFunctionButton = document.getElementById('addFunction');
+    const functionInput = document.getElementById('functionInput');
+
+    let rectangles = [];
+    let isDragging = false;
+    let draggedElement = null;
+    let offsetX, offsetY;
+    let relationships = [];
+
+    // Add a rectangle to the container
+    function addRectangle(name) {
+      const rectangle = document.createElement('div');
+      rectangle.className = 'rectangle';
+      rectangle.textContent = name;
+      rectangle.style.left = `${Math.random() * (container.offsetWidth - 100)}px`;
+      rectangle.style.top = `${Math.random() * (container.offsetHeight - 50)}px`;
+      rectangle.draggable = false;
+
+      // Handle drag
+      rectangle.addEventListener('mousedown', (e) => {
+        isDragging = true;
+        draggedElement = rectangle;
+        offsetX = e.offsetX;
+        offsetY = e.offsetY;
+      });
+
+      rectangles.push(rectangle);
+      container.appendChild(rectangle);
+    }
+
+    // Handle mousemove for dragging
+    container.addEventListener('mousemove', (e) => {
+      if (isDragging && draggedElement) {
+        draggedElement.style.left = `${e.clientX - offsetX}px`;
+        draggedElement.style.top = `${e.clientY - offsetY}px`;
+        updateLines();
+      }
+    });
+
+    // Stop dragging on mouseup
+    container.addEventListener('mouseup', () => {
+      isDragging = false;
+      draggedElement = null;
+    });
+
+    // Add relationships
+    function addRelationship(rect1, rect2) {
+      const line = document.createElement('div');
+      line.className = 'line';
+      line.dataset.from = rect1.textContent;
+      line.dataset.to = rect2.textContent;
+
+      container.appendChild(line);
+      relationships.push({ line, rect1, rect2 });
+      updateLine(line, rect1, rect2);
+    }
+
+    // Update all lines
+    function updateLines() {
+      relationships.forEach(({ line, rect1, rect2 }) => {
+        updateLine(line, rect1, rect2);
+      });
+    }
+
+    // Update line position
+    function updateLine(line, rect1, rect2) {
+      const rect1Rect = rect1.getBoundingClientRect();
+      const rect2Rect = rect2.getBoundingClientRect();
+
+      const x1 = rect1Rect.left + rect1Rect.width / 2;
+      const y1 = rect1Rect.top + rect1Rect.height / 2;
+      const x2 = rect2Rect.left + rect2Rect.width / 2;
+      const y2 = rect2Rect.top + rect2Rect.height / 2;
+
+      const length = Math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2);
+      const angle = Math.atan2(y2 - y1, x2 - x1) * (180 / Math.PI);
+
+      line.style.width = `${length}px`;
+      line.style.height = `2px`;
+      line.style.transform = `rotate(${angle}deg)`;
+      line.style.left = `${x1}px`;
+      line.style.top = `${y1}px`;
+    }
+
+    // Add a function on button click
+    addFunctionButton.addEventListener('click', () => {
+      const name = functionInput.value.trim();
+      if (name) {
+        addRectangle(name);
+        functionInput.value = '';
+      }
+    });
+
+    // Add relationships by clicking two rectangles in sequence
+    let selectedRectangle = null;
+    container.addEventListener('click', (e) => {
+      if (e.target.classList.contains('rectangle')) {
+        if (!selectedRectangle) {
+          selectedRectangle = e.target;
+          e.target.style.borderColor = 'red';
+        } else {
+          if (selectedRectangle !== e.target) {
+            addRelationship(selectedRectangle, e.target);
+          }
+          selectedRectangle.style.borderColor = '#007bff';
+          selectedRectangle = null;
+        }
+      }
+    });
+  </script>
+</body>
+</html>
+
