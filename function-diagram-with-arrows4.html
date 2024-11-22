@@ -146,6 +146,7 @@
         arrow.setAttribute('stroke', '#007bff');
         arrow.setAttribute('stroke-width', '2');
         arrow.setAttribute('marker-end', 'url(#arrowhead)');
+        arrow.style.pointerEvents = 'all'; // Enable interactivity on the line
 
         // Add click event to delete the arrow
         arrow.addEventListener('click', () => {
